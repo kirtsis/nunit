@@ -1,4 +1,4 @@
-﻿// ***********************************************************************
+// ***********************************************************************
 // Copyright (c) 2015 Charlie Poole, Rob Prouse
 //
 // Permission is hereby granted, free of charge, to any person obtaining
@@ -8,10 +8,10 @@
 // distribute, sublicense, and/or sell copies of the Software, and to
 // permit persons to whom the Software is furnished to do so, subject to
 // the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -25,6 +25,7 @@ using System.Collections;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
 using System;
+using System.Collections.Generic;
 
 namespace NUnit.TestData.TestFixtureSourceData
 {
@@ -90,7 +91,7 @@ namespace NUnit.TestData.TestFixtureSourceData
     }
 
     [TestFixtureSource("StaticProperty")]
-    public class StaticProperty_InheritedClass : StaticProperty_SameClass 
+    public class StaticProperty_InheritedClass : StaticProperty_SameClass
     {
         public StaticProperty_InheritedClass (string arg) : base(arg, "StaticPropertyInClass") { }
     }
@@ -247,6 +248,58 @@ namespace NUnit.TestData.TestFixtureSourceData
             yield return new TestFixtureData("GoodData");
             yield return new TestFixtureData("ExplicitData").Explicit("Runs long");
             yield return new TestFixtureData("MoreExplicitData").Explicit();
+        }
+    }
+
+    [TestFixtureSource(nameof(NamedData))]
+    public sealed class IndividualInstancesMayBeNamed
+    {
+        public string ExpectedFixtureName { get; }
+
+        public IndividualInstancesMayBeNamed(params object[] args)
+        {
+            ExpectedFixtureName = Data[Array.FindIndex(Data, _ => _.Args == args)].ExpectedFixtureName;
+        }
+
+        private static readonly ActualTestData[] Data =
+        {
+            new ActualTestData(null, new object[] { "a" }, new string[] { "a" }, typeof(IndividualInstancesMayBeNamed).FullName + "(a)")
+        };
+
+        [Test]
+        public static void Test() { }
+
+        public static IEnumerable<TestFixtureData> NamedData()
+        {
+            foreach (var data in Data)
+                yield return data.TestFixtureData;
+        }
+
+        private struct ActualTestData
+        {
+            private readonly string _testName;
+            public object[] Args { get; }
+            private readonly string[] _argNames;
+            public string ExpectedFixtureName { get; }
+
+            public ActualTestData(string testName, object[] args, string[] argNames, string expectedFixtureName)
+            {
+                _testName = testName;
+                Args = args;
+                _argNames = argNames;
+                ExpectedFixtureName = expectedFixtureName;
+            }
+
+            public TestFixtureData TestFixtureData
+            {
+                get
+                {
+                    var data = new TestFixtureData(Args);
+                    if (_testName != null) data.SetName(_testName);
+                    if (_argNames != null) data.SetArgNames(_argNames);
+                    return data;
+                }
+            }
         }
     }
 

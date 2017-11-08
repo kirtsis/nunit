@@ -1,4 +1,4 @@
-﻿// ***********************************************************************
+// ***********************************************************************
 // Copyright (c) 2015 Charlie Poole, Rob Prouse
 //
 // Permission is hereby granted, free of charge, to any person obtaining
@@ -22,10 +22,9 @@
 // ***********************************************************************
 
 using System;
-using NUnit.Framework;
+using System.Linq;
 using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
-using NUnit.Framework.Internal.Filters;
 using NUnit.TestData.TestFixtureSourceData;
 using NUnit.TestUtilities;
 
@@ -85,6 +84,19 @@ namespace NUnit.Framework.Attributes
             Assert.That(suite.Tests[1].RunState, Is.EqualTo(RunState.Explicit));
             Assert.That(suite.Tests[1].Properties.Get(PropertyNames.SkipReason), Is.EqualTo("Runs long"));
             Assert.That(suite.Tests[2].RunState, Is.EqualTo(RunState.Explicit));
+        }
+
+        [Test]
+        public void CanSetIndividualFixtureNames()
+        {
+            TestSuite suite = TestBuilder.MakeFixture(typeof(IndividualInstancesMayBeNamed));
+
+            Assert.That(suite.Tests, Has.Exactly(IndividualInstancesMayBeNamed.NamedData().Count()).Items);
+
+            foreach (var data in suite.Tests)
+            {
+                Assert.That(data.FullName, Is.EqualTo(((IndividualInstancesMayBeNamed)data.Fixture).ExpectedFixtureName));
+            }
         }
 
         [Test]
